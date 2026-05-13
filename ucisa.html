@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Interactive Poster Viewer</title>
+
+<style>
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #111;
+  font-family: Arial, sans-serif;
+}
+
+/* viewport */
+.viewer {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+}
+
+.viewer:active {
+  cursor: grabbing;
+}
+
+/* image */
+#img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  user-select: none;
+  will-change: transform;
+}
+
+/* help text */
+.hint {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="viewer" id="viewer">
+  <img
+    id="img"
+    src="https://raw.githubusercontent.com/NuttyRyan/UCISA/main/BX3101%20-%20Nutanix%20AO%20Solutions%20Poster(VF-screen).jpg"
+    alt="Poster"
+  />
+  <div class="hint">Scroll to zoom • Drag to pan</div>
+</div>
+
+<script>
+const img = document.getElementById("img");
+const viewer = document.getElementById("viewer");
+
+let scale = 1;
+let x = 0;
+let y = 0;
+
+let isDragging = false;
+let startX, startY;
+
+// apply transform
+function update() {
+  img.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+// zoom with mouse wheel (zoom to cursor)
+viewer.addEventListener("wheel", (e) => {
+  e.preventDefault();
+
+  const rect = img.getBoundingClientRect();
+
+  // mouse position relative to image
+  const mouseX = e.clientX - rect.left;
+  const mouseY = e.clientY - rect.top;
+
+  const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+  const newScale = Math.min(Math.max(scale * zoomFactor, 0.5), 6);
+
+  // adjust pan so zoom is centered on cursor
+  x -= (mouseX - rect.width / 2) * (newScale / scale - 1);
+  y -= (mouseY - rect.height / 2) * (newScale / scale - 1);
+
+  scale = newScale;
+  update();
+}, { passive: false });
+
+// drag to pan
+viewer.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  startX = e.clientX - x;
+  startY = e.clientY - y;
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
+  x = e.clientX - startX;
+  y = e.clientY - startY;
+  update();
+});
+
+window.addEventListener("mouseup", () => {
+  isDragging = false;
+});
+
+// optional: double click to reset
+viewer.addEventListener("dblclick", () => {
+  scale = 1;
+  x = 0;
+  y = 0;
+  update();
+});
+
+update();
+</script>
+
+</body>
+</html>
