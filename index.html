@@ -33,8 +33,164 @@ html, body {
   font-size: 22px;
   margin-bottom: 10px;
   font-weight: normal;
-  opacity: 0.9;
 }
+
+#startScreen p {
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+/* Viewer */
+.viewer {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+}
+
+.viewer:active {
+  cursor: grabbing;
+}
+
+#img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  user-select: none;
+  will-change: transform;
+  max-width: none;
+}
+
+.hint {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="startScreen">
+  <h1>Click to Enter Fullscreen</h1>
+  <p>Scroll to zoom • Drag to pan</p>
+</div>
+
+<div class="viewer" id="viewer" style="display:none;">
+  <img
+    id="img"
+    src="https://raw.githubusercontent.com/NuttyRyan/UCISA/main/BX3101%20-%20Nutanix%20AO%20Solutions%20Poster(VF-screen).jpg"
+  />
+  <div class="hint">Scroll to zoom • Drag to pan • Double click reset</div>
+</div>
+
+<script>
+const startScreen = document.getElementById("startScreen");
+const viewer = document.getElementById("viewer");
+const img = document.getElementById("img");
+
+let scale = 1;
+let baseScale = 1;
+let x = 0;
+let y = 0;
+
+let isDragging = false;
+let startX, startY;
+
+/* FIT IMAGE TO SCREEN */
+function fitToScreen() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  const iw = img.naturalWidth;
+  const ih = img.naturalHeight;
+
+  const scaleX = vw / iw;
+  const scaleY = vh / ih;
+
+  baseScale = Math.min(scaleX, scaleY);
+
+  scale = baseScale;
+  x = 0;
+  y = 0;
+
+  update();
+}
+
+/* APPLY TRANSFORM */
+function update() {
+  img.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+}
+
+/* ENTER FULLSCREEN */
+startScreen.addEventListener("click", async () => {
+  await document.documentElement.requestFullscreen().catch(() => {});
+
+  startScreen.style.display = "none";
+  viewer.style.display = "block";
+
+  // ensure image is loaded before fitting
+  if (img.complete) {
+    fitToScreen();
+  } else {
+    img.onload = fitToScreen;
+  }
+});
+
+/* ZOOM (mouse wheel) */
+viewer.addEventListener("wheel", (e) => {
+  e.preventDefault();
+
+  const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+  const newScale = Math.min(Math.max(scale * zoomFactor, baseScale * 0.5), baseScale * 8);
+
+  scale = newScale;
+  update();
+}, { passive: false });
+
+/* PAN */
+viewer.addEventListener("mousedown", (e) => {
+  isDragging = true;
+  startX = e.clientX - x;
+  startY = e.clientY - y;
+});
+
+window.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
+  x = e.clientX - startX;
+  y = e.clientY - startY;
+  update();
+});
+
+window.addEventListener("mouseup", () => {
+  isDragging = false;
+});
+
+/* RESET */
+viewer.addEventListener("dblclick", () => {
+  scale = baseScale;
+  x = 0;
+  y = 0;
+  update();
+});
+
+/* HANDLE RESIZE */
+window.addEventListener("resize", () => {
+  if (viewer.style.display !== "none") {
+    fitToScreen();
+  }
+});
+</script>
+
+</body>
+</html>}
 
 #startScreen p {
   opacity: 0.7;
