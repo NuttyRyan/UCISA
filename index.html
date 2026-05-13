@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<title>Nutanix</title>
+<title>Poster Viewer</title>
 
 <style>
 html, body {
@@ -15,7 +15,7 @@ html, body {
   font-family: Arial, sans-serif;
 }
 
-/* FULL SCREEN OVERLAY */
+/* FULL SCREEN VIEWER */
 .viewer {
   position: fixed;
   inset: 0;
@@ -40,7 +40,32 @@ html, body {
   max-width: none;
 }
 
-/* UI hint */
+/* TOOLBAR */
+.toolbar {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+.btn {
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 13px;
+  transition: 0.2s;
+  backdrop-filter: blur(6px);
+}
+
+.btn:hover {
+  background: rgba(0,0,0,0.85);
+}
+
+/* hint */
 .hint {
   position: absolute;
   bottom: 20px;
@@ -57,11 +82,29 @@ html, body {
 <body>
 
 <div class="viewer" id="viewer">
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <a class="btn"
+       href="https://raw.githubusercontent.com/NuttyRyan/UCISA/main/BX3101%20-%20Nutanix%20AO%20Solutions%20Poster(VF-screen).jpg"
+       download>
+      Download
+    </a>
+
+    <a class="btn"
+       href="mailto:kev@nutanix.com?subject=Nutanix%20in%20Higher%20Education">
+      Email Us
+    </a>
+  </div>
+
+  <!-- Image -->
   <img
     id="img"
     src="https://raw.githubusercontent.com/NuttyRyan/UCISA/main/BX3101%20-%20Nutanix%20AO%20Solutions%20Poster(VF-screen).jpg"
   />
+
   <div class="hint">Scroll to zoom • Drag to pan • Double click reset</div>
+
 </div>
 
 <script>
@@ -76,7 +119,7 @@ let y = 0;
 let dragging = false;
 let startX, startY;
 
-/* FIT TO SCREEN */
+/* FIT IMAGE */
 function fit() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
@@ -139,14 +182,13 @@ viewer.addEventListener("dblclick", () => {
   update();
 });
 
-/* LOAD */
+/* INIT */
 if (img.complete) {
   fit();
 } else {
   img.onload = fit;
 }
 
-/* RESIZE SAFE */
 window.addEventListener("resize", fit);
 
 update();
