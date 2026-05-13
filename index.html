@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<title>Interactive Poster Viewer</title>
+<title>Fullscreen Poster Viewer</title>
 
 <style>
 html, body {
@@ -15,7 +15,33 @@ html, body {
   font-family: Arial, sans-serif;
 }
 
-/* viewport */
+/* Start screen */
+#startScreen {
+  position: fixed;
+  inset: 0;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-direction: column;
+  cursor: pointer;
+  text-align: center;
+}
+
+#startScreen h1 {
+  font-size: 22px;
+  margin-bottom: 10px;
+  font-weight: normal;
+  opacity: 0.9;
+}
+
+#startScreen p {
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+/* Viewer */
 .viewer {
   width: 100vw;
   height: 100vh;
@@ -28,7 +54,6 @@ html, body {
   cursor: grabbing;
 }
 
-/* image */
 #img {
   position: absolute;
   top: 50%;
@@ -36,9 +61,9 @@ html, body {
   transform-origin: center center;
   user-select: none;
   will-change: transform;
+  max-width: none;
 }
 
-/* help text */
 .hint {
   position: absolute;
   bottom: 20px;
@@ -47,25 +72,32 @@ html, body {
   color: white;
   padding: 10px 14px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="viewer" id="viewer">
+<!-- Start Screen -->
+<div id="startScreen">
+  <h1>Click to Enter Fullscreen Viewer</h1>
+  <p>Then use scroll to zoom • drag to pan</p>
+</div>
+
+<!-- Viewer -->
+<div class="viewer" id="viewer" style="display:none;">
   <img
     id="img"
     src="https://raw.githubusercontent.com/NuttyRyan/UCISA/main/BX3101%20-%20Nutanix%20AO%20Solutions%20Poster(VF-screen).jpg"
-    alt="Poster"
   />
-  <div class="hint">Scroll to zoom • Drag to pan</div>
+  <div class="hint">Scroll to zoom • Drag to pan • Double click to reset</div>
 </div>
 
 <script>
-const img = document.getElementById("img");
+const startScreen = document.getElementById("startScreen");
 const viewer = document.getElementById("viewer");
+const img = document.getElementById("img");
 
 let scale = 1;
 let x = 0;
@@ -74,25 +106,34 @@ let y = 0;
 let isDragging = false;
 let startX, startY;
 
-// apply transform
 function update() {
   img.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
 }
 
-// zoom with mouse wheel (zoom to cursor)
+/* FULLSCREEN ENTRY */
+startScreen.addEventListener("click", async () => {
+  try {
+    await document.documentElement.requestFullscreen();
+  } catch (e) {
+    console.log("Fullscreen failed:", e);
+  }
+
+  startScreen.style.display = "none";
+  viewer.style.display = "block";
+});
+
+/* ZOOM */
 viewer.addEventListener("wheel", (e) => {
   e.preventDefault();
 
   const rect = img.getBoundingClientRect();
 
-  // mouse position relative to image
   const mouseX = e.clientX - rect.left;
   const mouseY = e.clientY - rect.top;
 
   const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-  const newScale = Math.min(Math.max(scale * zoomFactor, 0.5), 6);
+  const newScale = Math.min(Math.max(scale * zoomFactor, 0.5), 8);
 
-  // adjust pan so zoom is centered on cursor
   x -= (mouseX - rect.width / 2) * (newScale / scale - 1);
   y -= (mouseY - rect.height / 2) * (newScale / scale - 1);
 
@@ -100,7 +141,7 @@ viewer.addEventListener("wheel", (e) => {
   update();
 }, { passive: false });
 
-// drag to pan
+/* PAN */
 viewer.addEventListener("mousedown", (e) => {
   isDragging = true;
   startX = e.clientX - x;
@@ -118,7 +159,7 @@ window.addEventListener("mouseup", () => {
   isDragging = false;
 });
 
-// optional: double click to reset
+/* RESET */
 viewer.addEventListener("dblclick", () => {
   scale = 1;
   x = 0;
