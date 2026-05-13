@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<title>Fullscreen Poster Viewer</title>
+<title>Poster Viewer</title>
 
 <style>
 html, body {
@@ -15,37 +15,14 @@ html, body {
   font-family: Arial, sans-serif;
 }
 
-/* Start screen */
-#startScreen {
+/* FULL SCREEN OVERLAY */
+.viewer {
   position: fixed;
   inset: 0;
-  background: #111;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  flex-direction: column;
-  cursor: pointer;
-  text-align: center;
-}
-
-#startScreen h1 {
-  font-size: 22px;
-  margin-bottom: 10px;
-  font-weight: normal;
-}
-
-#startScreen p {
-  opacity: 0.7;
-  font-size: 14px;
-}
-
-/* Viewer */
-.viewer {
   width: 100vw;
   height: 100vh;
+  background: #111;
   overflow: hidden;
-  position: relative;
   cursor: grab;
 }
 
@@ -63,6 +40,7 @@ html, body {
   max-width: none;
 }
 
+/* UI hint */
 .hint {
   position: absolute;
   bottom: 20px;
@@ -78,12 +56,7 @@ html, body {
 
 <body>
 
-<div id="startScreen">
-  <h1>Click to Enter Fullscreen</h1>
-  <p>Scroll to zoom • Drag to pan</p>
-</div>
-
-<div class="viewer" id="viewer" style="display:none;">
+<div class="viewer" id="viewer">
   <img
     id="img"
     src="https://raw.githubusercontent.com/NuttyRyan/UCISA/main/BX3101%20-%20Nutanix%20AO%20Solutions%20Poster(VF-screen).jpg"
@@ -92,7 +65,6 @@ html, body {
 </div>
 
 <script>
-const startScreen = document.getElementById("startScreen");
 const viewer = document.getElementById("viewer");
 const img = document.getElementById("img");
 
@@ -101,11 +73,11 @@ let baseScale = 1;
 let x = 0;
 let y = 0;
 
-let isDragging = false;
+let dragging = false;
 let startX, startY;
 
-/* FIT IMAGE TO SCREEN */
-function fitToScreen() {
+/* FIT TO SCREEN */
+function fit() {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
 
@@ -126,25 +98,11 @@ function fitToScreen() {
 
 /* APPLY TRANSFORM */
 function update() {
-  img.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+  img.style.transform =
+    `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
 }
 
-/* ENTER FULLSCREEN */
-startScreen.addEventListener("click", async () => {
-  await document.documentElement.requestFullscreen().catch(() => {});
-
-  startScreen.style.display = "none";
-  viewer.style.display = "block";
-
-  // ensure image is loaded before fitting
-  if (img.complete) {
-    fitToScreen();
-  } else {
-    img.onload = fitToScreen;
-  }
-});
-
-/* ZOOM (mouse wheel) */
+/* ZOOM */
 viewer.addEventListener("wheel", (e) => {
   e.preventDefault();
 
@@ -157,20 +115,20 @@ viewer.addEventListener("wheel", (e) => {
 
 /* PAN */
 viewer.addEventListener("mousedown", (e) => {
-  isDragging = true;
+  dragging = true;
   startX = e.clientX - x;
   startY = e.clientY - y;
 });
 
 window.addEventListener("mousemove", (e) => {
-  if (!isDragging) return;
+  if (!dragging) return;
   x = e.clientX - startX;
   y = e.clientY - startY;
   update();
 });
 
 window.addEventListener("mouseup", () => {
-  isDragging = false;
+  dragging = false;
 });
 
 /* RESET */
@@ -181,147 +139,15 @@ viewer.addEventListener("dblclick", () => {
   update();
 });
 
-/* HANDLE RESIZE */
-window.addEventListener("resize", () => {
-  if (viewer.style.display !== "none") {
-    fitToScreen();
-  }
-});
-</script>
-
-</body>
-</html>}
-
-#startScreen p {
-  opacity: 0.7;
-  font-size: 14px;
+/* LOAD */
+if (img.complete) {
+  fit();
+} else {
+  img.onload = fit;
 }
 
-/* Viewer */
-.viewer {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  position: relative;
-  cursor: grab;
-}
-
-.viewer:active {
-  cursor: grabbing;
-}
-
-#img {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform-origin: center center;
-  user-select: none;
-  will-change: transform;
-  max-width: none;
-}
-
-.hint {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-}
-</style>
-</head>
-
-<body>
-
-<!-- Start Screen -->
-<div id="startScreen">
-  <h1>Click to Enter Fullscreen Viewer</h1>
-  <p>Then use scroll to zoom • drag to pan</p>
-</div>
-
-<!-- Viewer -->
-<div class="viewer" id="viewer" style="display:none;">
-  <img
-    id="img"
-    src="https://raw.githubusercontent.com/NuttyRyan/UCISA/main/BX3101%20-%20Nutanix%20AO%20Solutions%20Poster(VF-screen).jpg"
-  />
-  <div class="hint">Scroll to zoom • Drag to pan • Double click to reset</div>
-</div>
-
-<script>
-const startScreen = document.getElementById("startScreen");
-const viewer = document.getElementById("viewer");
-const img = document.getElementById("img");
-
-let scale = 1;
-let x = 0;
-let y = 0;
-
-let isDragging = false;
-let startX, startY;
-
-function update() {
-  img.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-}
-
-/* FULLSCREEN ENTRY */
-startScreen.addEventListener("click", async () => {
-  try {
-    await document.documentElement.requestFullscreen();
-  } catch (e) {
-    console.log("Fullscreen failed:", e);
-  }
-
-  startScreen.style.display = "none";
-  viewer.style.display = "block";
-});
-
-/* ZOOM */
-viewer.addEventListener("wheel", (e) => {
-  e.preventDefault();
-
-  const rect = img.getBoundingClientRect();
-
-  const mouseX = e.clientX - rect.left;
-  const mouseY = e.clientY - rect.top;
-
-  const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-  const newScale = Math.min(Math.max(scale * zoomFactor, 0.5), 8);
-
-  x -= (mouseX - rect.width / 2) * (newScale / scale - 1);
-  y -= (mouseY - rect.height / 2) * (newScale / scale - 1);
-
-  scale = newScale;
-  update();
-}, { passive: false });
-
-/* PAN */
-viewer.addEventListener("mousedown", (e) => {
-  isDragging = true;
-  startX = e.clientX - x;
-  startY = e.clientY - y;
-});
-
-window.addEventListener("mousemove", (e) => {
-  if (!isDragging) return;
-  x = e.clientX - startX;
-  y = e.clientY - startY;
-  update();
-});
-
-window.addEventListener("mouseup", () => {
-  isDragging = false;
-});
-
-/* RESET */
-viewer.addEventListener("dblclick", () => {
-  scale = 1;
-  x = 0;
-  y = 0;
-  update();
-});
+/* RESIZE SAFE */
+window.addEventListener("resize", fit);
 
 update();
 </script>
